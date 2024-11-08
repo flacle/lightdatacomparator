@@ -4,11 +4,11 @@ This lightweight Python script helps you compare the contents of one root folder
 
 ## Problem Use Case
 
-Sometimes, you or your team members change a file in a folder. Suppose this folder contains raw data that feeds into a dataset or any other content. This folder is for some reason not meant to be versioned; it is not part of a repository. It can quickly happen that this change goes unnoticed. Suppose you have the same directory tree on another machine; how can you reduce the risk of a change going unnoticed?
+Sometimes, you or your team members change a file in some subfolder within a directory tree. Suppose this director tree contains raw data that feeds into a dataset or some other process. This directory is for some reason not meant to be versioned; it is not part of a repository. It can quickly happen that this change goes unnoticed. Suppose you have the same directory tree on another machine; how can you reduce the risk of a change going unnoticed?
 
 ## Solution
 
-One approach is to generate checksums for files in a directory tree and save these in a manifest file, which this script does. You can then compare manifests to identify differences between directory states. The manifest can be placed on a shared network drive that is accessible by both machines.
+One approach is to generate checksums for all files in a directory tree and save these in a single manifest file, which this script does. You can then compare manifests to spot differences between directory states. The manifest can be placed on a shared network drive that is accessible by both machines.
 
 This solution can be part of a data processing or training pipeline where you would apply the comparison to assert equality before loading the data for further processing.
 
