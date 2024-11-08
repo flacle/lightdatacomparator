@@ -26,7 +26,9 @@ def generate_checksums(root_dir):
             if relative_path.name in IGNORED_FILES:
                 continue
             file_checksum = compute_file_checksum(file_path)
-            checksums.append((str(relative_path), file_checksum))
+            # Normalize the relative path to use forward slashes
+            normalized_path = relative_path.as_posix()
+            checksums.append((normalized_path, file_checksum))
     # Sort the list to ensure consistent order
     checksums.sort()
     return checksums
