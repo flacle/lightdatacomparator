@@ -1,4 +1,4 @@
-# Light Data Checker
+# Light Data Comparator
 
 This lightweight Python script helps you compare the contents of one root folder with those of another that is not part of an information tracker such as Git.
 
@@ -15,7 +15,7 @@ One approach is to generate checksums for files in a directory tree and save the
 Clone the repository to your local machine:
 
 ```bash
-git clone https://github.com/flacle/lightdatachecker.git
+git clone https://github.com/flacle/lightdatacomparator.git
 ```
 
 The goal is to keep this lightweight, so no dependencies are needed. The script uses Python's built-in libraries.
@@ -40,7 +40,7 @@ python ldc.py <command> [options]
 #### Notes
 
 - The password is for obfuscation purposes only. Do not use this for sensitive data.
-- The manifest file is saved with a custom `.checker` extension.
+- The manifest file is saved with a custom `.comparator` extension.
 - You can use the `--output` option to generate a manifest file on a shared network drive.
 - This repository contains a unit test script with a sample directory to test the script.
 
@@ -49,13 +49,13 @@ python ldc.py <command> [options]
 Generate a manifest file for a directory:
 
 ```bash
-python ldc.py /path/to/directory --password your_password --output manifest.checker
+python ldc.py /path/to/directory --password your_password --output manifest_hash.comparator
 ```
 
 Compare directory with existing manifest file:
 
 ```bash
-python ldc.py /path/to/directory --password your_password --compare previous_manifest.checker
+python ldc.py /path/to/directory --password your_password --compare previous_manifest_hash.comparator
 ```
 
 ## Contributing
