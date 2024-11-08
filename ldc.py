@@ -1,10 +1,21 @@
 import os
+import json
 import hashlib
 import argparse
 from pathlib import Path
 
-# Define system files to ignore
-IGNORED_FILES = {'.DS_Store', 'Thumbs.db', 'desktop.ini'}
+def load_ignored_file_types_list(json_file_path, key='ignored_file_types'):
+    if not os.path.isfile(json_file_path):
+        raise FileNotFoundError(f'The file "{json_file_path}" does not exist.')
+    if not json_file_path.lower().endswith('.json'):
+        raise ValueError(f'The file "{json_file_path}" is not a JSON file.')
+    with open(json_file_path, 'r') as f:
+        data = json.load(f)
+    if key not in data:
+        raise ValueError(f'The key "{key}" was not found in the JSON file.')
+    if not isinstance(data[key], list):
+        raise ValueError('The JSON file must contain a list of filenames.')
+    return data[key]
 
 def compute_file_checksum(file_path):
     """Compute SHA-256 checksum of a file."""
@@ -98,6 +109,9 @@ def compare_manifests(manifest1, manifest2):
                 modified.append(key)
     return added, deleted, modified
 
+# Load the list of ignored files from the JSON file
+IGNORED_FILES = load_ignored_file_types_list('ignored_files.json')
+
 def main():
     """
     Compute directory checksums, save the encrypted manifest, and optionally compare with another manifest.
@@ -125,6 +139,7 @@ def main():
 
     try:
         # Generate checksums of the current directory
+        print(f'Generating checksums for directory: {args.directory}...')
         checksums = generate_checksums(args.directory)
         # Save the manifest if not comparing
         if not args.compare:
