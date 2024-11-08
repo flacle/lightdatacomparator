@@ -48,7 +48,7 @@ def save_manifest_encrypted(checksums, password, output_path=None):
     encrypted_manifest = simple_encrypt_decrypt(manifest_bytes, password)
     # Compute the hash of the manifest content for the filename
     manifest_hash = hashlib.sha256(manifest_bytes).hexdigest()
-    manifest_filename = f'{manifest_hash}.checker'
+    manifest_filename = f'{manifest_hash}.comparator'
     #  if output_path is not provided
     if output_path:
         # `output_path` is always a directory

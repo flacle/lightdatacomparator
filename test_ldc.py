@@ -9,7 +9,7 @@ from ldc import (
 
 class TestLDC(unittest.TestCase):
     """
-    TestCase subclass that contains unit tests for the Light Data Checker (LDC) module. 
+    TestCase subclass that contains unit tests for the Light Data Comparator (LDC) module. 
     It tests functionalities such as generating checksums for files in directories, computing overall checksums, 
     saving and loading manifests with encryption, and comparing manifests to detect added, deleted, or modified files.
 
