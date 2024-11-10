@@ -4,6 +4,7 @@ import hashlib
 import argparse
 from pathlib import Path
 
+
 def load_ignored_file_types_list(json_file_path, key='ignored_file_types'):
     if not os.path.isfile(json_file_path):
         raise FileNotFoundError(f'The file "{json_file_path}" does not exist.')
@@ -17,6 +18,7 @@ def load_ignored_file_types_list(json_file_path, key='ignored_file_types'):
         raise ValueError('The JSON file must contain a list of filenames.')
     return data[key]
 
+
 def compute_file_checksum(file_path):
     """Compute SHA-256 checksum of a file."""
     hash_sha256 = hashlib.sha256()
@@ -25,6 +27,7 @@ def compute_file_checksum(file_path):
         for chunk in iter(lambda: f.read(4096), b''):
             hash_sha256.update(chunk)
     return hash_sha256.hexdigest()
+
 
 def generate_checksums(root_dir):
     """Generate checksums for all files in the directory tree."""
@@ -43,6 +46,7 @@ def generate_checksums(root_dir):
     checksums.sort()
     return checksums
 
+
 def simple_encrypt_decrypt(content, password):
     """Encrypt or decrypt content using a simple XOR cipher."""
     key = hashlib.sha256(password.encode('utf-8')).digest()
@@ -51,9 +55,11 @@ def simple_encrypt_decrypt(content, password):
         encrypted.append(content[i] ^ key[i % len(key)])
     return bytes(encrypted)
 
+
 def save_manifest_encrypted(checksums, password, output_path=None):
     """Save the per-file checksums to an encrypted manifest file."""
-    manifest_content = '\n'.join(f'{checksum}  {path}' for path, checksum in checksums)
+    manifest_content = '\n'.join(
+        f'{checksum}  {path}' for path, checksum in checksums)
     # Add a known header to the manifest content
     manifest_content = 'MANIFEST_HEADER' + manifest_content
     manifest_bytes = manifest_content.encode('utf-8')
@@ -69,6 +75,7 @@ def save_manifest_encrypted(checksums, password, output_path=None):
         f.write(encrypted_manifest)
     return manifest_filename
 
+
 def load_manifest_encrypted(manifest_file, password):
     """Load and decrypt checksums from an encrypted manifest file."""
     with open(manifest_file, 'rb') as f:
@@ -82,12 +89,48 @@ def load_manifest_encrypted(manifest_file, password):
         # Remove the header before processing
         manifest_text = manifest_text[len('MANIFEST_HEADER'):]
     except (UnicodeDecodeError, ValueError) as e:
-        raise ValueError('Incorrect password or corrupted manifest file.') from e
+        raise ValueError(
+            'Incorrect password or corrupted manifest file.') from e
     checksums = []
     for line in manifest_text.strip().split('\n'):
         checksum, path = line.strip().split('  ', 1)
         checksums.append((path, checksum))
     return checksums
+
+
+def load_manifest(manifest_file):
+    """Load checksums from an unencrypted manifest file."""
+    with open(manifest_file, 'r') as f:
+        manifest_text = f.read()
+    # Verify the header
+    if not manifest_text.startswith('MANIFEST_HEADER'):
+        raise ValueError('Invalid manifest file format.')
+    # Remove the header before processing
+    manifest_text = manifest_text[len('MANIFEST_HEADER'):]
+    checksums = []
+    for line in manifest_text.strip().split('\n'):
+        checksum, path = line.strip().split('  ', 1)
+        checksums.append((path, checksum))
+    return checksums
+
+
+def save_manifest(checksums, output_path=None):
+    """Save the per-file checksums to a manifest file without encryption."""
+    manifest_content = '\n'.join(
+        f'{checksum}  {path}' for path, checksum in checksums)
+    # Add a known header to the manifest content
+    manifest_content = 'MANIFEST_HEADER' + manifest_content
+    manifest_bytes = manifest_content.encode('utf-8')
+    # Compute the hash of the manifest content for the filename
+    manifest_hash = hashlib.sha256(manifest_bytes).hexdigest()
+    manifest_filename = f'{manifest_hash}.comparator'
+    # If output_path is provided
+    if output_path:
+        manifest_filename = os.path.join(output_path, manifest_filename)
+    with open(manifest_filename, 'w') as f:
+        f.write(manifest_content)
+    return manifest_filename
+
 
 def compare_manifests(manifest1, manifest2):
     """Compare two manifests and categorize differences."""
@@ -109,8 +152,10 @@ def compare_manifests(manifest1, manifest2):
                 modified.append(key)
     return added, deleted, modified
 
+
 # Load the list of ignored files from the JSON file
 IGNORED_FILES = load_ignored_file_types_list('ignored_files.json')
+
 
 def main():
     """
@@ -122,20 +167,36 @@ def main():
 
     Command-line Arguments:
         directory (str): Root directory to compute checksums for.
-        --password (str): Password for encrypting the manifest.
+        --password (str): Password for encrypting the manifest (required unless --debug is set).
+        --debug (bool, optional): Run in debug mode (manifest is not encrypted).
         --output (str, optional): Path or filename to save the manifest.
         --compare (str, optional): Path to an existing manifest file to compare against.
     """
     parser = argparse.ArgumentParser(description='Compute directory checksum.')
-    parser.add_argument('directory', help='Root directory to compute checksum for.')
-    parser.add_argument('--password', required=True, help='Password for encrypting the manifest.')
-    parser.add_argument('--output', help='Specify the output file path for the manifest (only when not comparing).')
-    parser.add_argument('--compare', help='Compare directory with an existing manifest file.')
+    parser.add_argument(
+        'directory', help='Root directory to compute checksum for.')
+    parser.add_argument(
+        '--password', help='Password for encrypting the manifest (required unless --debug is set).')
+    parser.add_argument('--debug', action='store_true',
+                        help='Run in debug mode (manifest is not encrypted).')
+    parser.add_argument(
+        '--output', help='Specify the output file path for the manifest (only when not comparing).')
+    parser.add_argument(
+        '--compare', help='Compare directory with an existing manifest file.')
     args = parser.parse_args()
+
+    # Validate that --password is required unless --debug is set
+    if args.debug and args.password:
+        parser.error(
+            "The '--password' argument cannot be used with '--debug'.")
+    elif not args.debug and not args.password:
+        parser.error(
+            "The '--password' argument is required unless '--debug' is set.")
 
     # Validate that --output is only used when --compare is not specified
     if args.compare and args.output:
-        parser.error("The '--output' argument cannot be used together with '--compare'.")
+        parser.error(
+            "The '--output' argument cannot be used together with '--compare'.")
 
     try:
         # Generate checksums of the current directory
@@ -143,7 +204,11 @@ def main():
         checksums = generate_checksums(args.directory)
         # Save the manifest if not comparing
         if not args.compare:
-            manifest_filename = save_manifest_encrypted(checksums, args.password, args.output)
+            if args.debug:
+                manifest_filename = save_manifest(checksums, args.output)
+            else:
+                manifest_filename = save_manifest_encrypted(
+                    checksums, args.password, args.output)
             print(f'Manifest saved to: {manifest_filename}')
     except Exception as e:
         print(f'Error generating manifest: {e}')
@@ -155,7 +220,11 @@ def main():
             return
         try:
             # Load checksums from the existing manifest file
-            old_checksums = load_manifest_encrypted(args.compare, args.password)
+            if args.debug:
+                old_checksums = load_manifest(args.compare)
+            else:
+                old_checksums = load_manifest_encrypted(
+                    args.compare, args.password)
         except ValueError as e:
             print(f'Error loading manifest: {e}')
             return
@@ -177,6 +246,7 @@ def main():
                     print(f' * {file}')
         else:
             print('No differences found compared to the provided manifest.')
+
 
 if __name__ == '__main__':
     main()
